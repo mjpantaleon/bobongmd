@@ -1,0 +1,299 @@
+<?php
+/** Set flag that this is a parent file */
+define( "MAIN", 1 );
+
+
+//require connection to the database
+require('db_con.php');
+log_hit();
+
+//gets the page name
+$page = mysql_real_escape_string(basename($_SERVER['SCRIPT_NAME']));
+
+
+//start session
+session_name( 'bbmdsession' );
+session_start();
+$FN 	= $_SESSION['fullname'];
+$UT_ID 	= $_SESSION['access'];
+$UID 	= $_SESSION['session_user_id'];
+$UT_N 	= $_SESSION['access_type'];
+$PIC	= $_SESSION['prof_pic'];
+$UN		= $_SESSION['session_username'];
+
+
+//LOG THIS EVENT
+$time_in = date("H:i:sa");							
+$cur_date = date("Y-m-d");
+$cur_timestamp = $cur_date." ".$time_in;	//concatinate time + current date
+
+$query = "	INSERT INTO events SET E_TS = '$cur_timestamp', UID = '$UID', E_D = '[ ".$FN." ] At page: [ ".$page." ]'	";
+mysql_query($query)
+or die(mysql_error());
+
+
+//if user dont have access then redirect then to unautorized page
+if( ($UT_ID!=1) && ($UT_ID!=2) && ($UID =='') )
+{
+	echo "<script>document.location.href='unauthorized.php';</script>\n";
+	exit();
+}
+
+
+$Message	= "";
+$Count 		= 0;
+?>
+
+<?php include 'm_header.php'; ?>
+
+
+<td width="75%" valign="top" align="left">
+	<div class="left" style="height:70px; background-color: #9C6;">
+        <div class="left" style="border-bottom: 1px solid #CCC; height:68px; margin-right: 5px;">
+            <span class="okw">
+            <img src="images/icons/home_icon.png" width="20" height="20" style="margin-top: 5px;" />&nbsp;HOME</span>
+            
+            <div class="left" style="margin-left: 25px; margin-top: 10px;">&nbsp; </div>
+    	</div>  
+         
+        <!-- WILL DISPLAY THE CONTENT-->
+        <div class="center" style="margin-top: 15px; margin-right: 5px; width: 97%;">
+             <!-- BANNER -->	
+             <div class="left" style=" border-top-left-radius: 0.3em; border-top-right-radius: 0.3em;">
+                 <div class="header_arrow_h">
+                    <span class="left">
+                        <img src="images/icons/Info-icon.png" width="20" height="20" style="margin-top: 2px;" />&nbsp;Welcome! Administrator
+                    </span>
+                    
+                    <span class="arrow">
+                    </span>
+                 </div>
+             </div>
+             <!-- BANNER -->
+             
+             
+        </div>
+     </div>   
+     	 
+         
+         <!-- LOAD CHANGE PROFILE POPUP -->
+         <div id="showLightbox"></div>
+         <!-- LOAD CHANGE PROFILE POPUP -->
+         
+      	 <!-- LOAD THE MESSAGE BOX HERE -->
+         <div id="showUserReg"></div>
+         <!-- LOAD THE MESSAGE BOX HERE -->
+         
+         <!-- LOAD MESSAGES POPUP -->
+         <div id="showSentByHere"></div>
+         <!-- LOAD MESSAGES POPUP -->
+         
+         <!-- LOAD ASSIGNMENT POPUP -->
+         <div id="showAssign"></div>
+         <!-- LOAD ASSIGNMENT POPUP -->
+</td>
+
+<td width="25%" valign="top" align="center" style="border-left:1px solid #999;">
+	<!-- DISPLAY PICTURE OF USER THAT LOGGED IN AND DETAILS -->
+	<div class="right" style="height: 68px;  background-color: #9C6; border-top-right-radius: 0.3em;">
+     <?php
+	//GETTING ALL THE INFORMATION OF THIS USER
+	$query	= " SELECT * FROM user_details WHERE UID = '".$UID."' ";
+	$result	= mysql_query($query);
+	$row	= mysql_fetch_array($result);
+	//declaire variable
+	$r_PIC	= $row['PIC'];	//Picture
+	
+	?>
+    	<table width="100%" border="0" cellspacing="0" cellpadding="0">
+          <tr>
+            <td>
+            <div style=" margin-top: 5px; margin-left: 25px;">
+             <?php
+			//set default profile pick if user doesnt have profile pick
+			//if profile picks is equal to empty then
+			if($r_PIC == '')
+				//we set the defaul profile pick 
+				echo ' <img src="images/icons/default_user.jpg" height="50" width="50" style="border: 1px solid #999;" /> ';
+			
+			//else if profile pick is NOT empty then
+			else
+				//we display the users profile pick
+				echo ' <img src="'.$r_PIC.'" height="50" width="50" style="border: 1px solid #999;" /> ';
+			//set default profile pick if user doesnt have profile pick
+			?>
+            </div>
+            </td>
+            <td class="a">
+                <div style=" margin-top: 5px;">
+                    <span class="okb"><?php echo $UN.'<br> '.$UT_N.'<br>'; ?>
+                    	<a href="#">Edit Account</a>
+                    </span>
+                </div>
+            </td>
+          </tr>
+        </table>	
+    </div>
+    <!-- DISPLAY PICTURE OF USER THAT LOGGED IN AND DETAILS -->
+    
+    
+    
+    <!-- Display Updates thats happening in the system -->
+     <div class="left" style=" margin-top: 1px; margin-left: 2px; margin-right: 2px; border-top: 1px solid #9C6;">
+    	<div style="margin-top: 5px; color:#9C3;"></div>
+    </div> 
+    
+     <div style="margin-top: 15px; margin-left: 5px; margin-right: 5px; margin-bottom: 15px;">
+        <div class="left" style=" height: 25px; border: 1px solid #CCC; border-top-left-radius: 0.3em; border-top-right-radius: 0.3em; 
+        background-color:#b6e56d">
+            <img src="images/icons/warning_48.png"  width="20" height="20" />&nbsp;Daily Updates            
+        </div>
+        
+        
+        <!-- DIV FOR NEW USER REGISTRY -->
+		<?php 
+        //we want to get the total number of users whos status is 0 or not yet active
+        $query		= " SELECT COUNT(ST) AS ST FROM users WHERE ST = '0' ";
+        $result		= mysql_query($query);
+        $row		= mysql_fetch_array($result);
+        //we get the total count based on the 0 status and place it in a variable '$T_ST'
+        $T_ST		= $row['ST'];	//will hold watever number is in the table
+       
+        //if there are users whos status is O then
+        if($T_ST)
+        //display an alert message to alert the admin
+        echo '
+        <div class="left" style="padding-top: 5px; padding-bottom: 5px; 
+        border-left:1px solid #CCC;  border-right:1px solid #CCC; border-bottom: 1px solid #CCC;">
+                <div class="left">
+                    <img src="images/icons/toolbar-icons/user_alert.png" width="20" height="20" />
+                    <input type="button" class="button" onclick="showUserReg()" value="User Registry" title="View Users" />
+					(<span class="error" style="font-size:14px">'.$T_ST.'</span>)
+                </div>
+        </div>
+             ';
+             
+        //if theres are no user whos status is O then
+        else
+        //display a gray colored text + unclickable link
+        echo '
+        <div class="left" style="padding-top: 5px; padding-bottom: 5px; 
+        border-left:1px solid #CCC;  border-right:1px solid #CCC; border-bottom: 1px solid #CCC;">
+            <div class="left">
+                <img src="images/icons/toolbar-icons/user.png" width="20" height="20" />&nbsp;
+                <span class="s_normal">User Registry</span>
+            </div>
+        </div>
+            ';
+        ?>	
+        <!-- DIV FOR NEW USER REGISTRY -->
+        
+        
+        
+        <!-- DIV FOR MESSAGES -->
+         <?php
+		//we have to check if theres a message whos status is 1 to this user
+		// DONR FORGET THE ALIAS!!!!
+		$query		= " SELECT COUNT(MST) AS MST FROM msgs WHERE msgTo= '".$UID."' AND MST = '1'  ";
+		$result		= mysql_query($query);
+		$row		= mysql_fetch_array($result);
+		//variable fot the total result
+		$T_MSG		= $row['MST'];
+		
+		//if theres a message to this user whos status is equal to 1 then
+		if($T_MSG)
+		
+		echo "
+		<div class='left' style='padding-top: 5px; padding-bottom: 5px; 
+		border-left:1px solid #CCC;  border-right:1px solid #CCC; border-bottom: 1px solid #CCC;'>
+			<div class='left'>
+				<img src='images/icons/email-alert.png' width='20' height='20' />&nbsp;
+				<input type='button' class='button' onclick='showSentBy2()' value='Inbox' title='View Messages' />
+				(<span class='error' style='font-size:14px'>".$T_MSG."</span>)
+			</div>
+		</div>
+		";
+	
+		
+		//else if theres no message whos status is equal to 1 then
+		else
+		
+		echo "
+		<div class='left' style='padding-top: 5px; padding-bottom: 5px; 
+		border-left:1px solid #CCC;  border-right:1px solid #CCC; border-bottom: 1px solid #CCC;'>
+			<div class='left'>
+				<img src='images/icons/Email-icon.png' width='20' height='20' />&nbsp;
+				<span class='s_normal'/>Inbox</span>
+			</div>
+		</div>
+		";
+
+		
+		
+		?>
+        <!-- DIV FOR MESSAGES -->
+        
+        
+        <!-- DIV FOR ASSIGNMENTS -->
+        <?php
+		//were gona get the count of all records in the assignment table whos status is equal to 1
+		$query		= " SELECT COUNT(id) AS id FROM assignment WHERE A_ST = '1' ";
+		$result		= mysql_query($query);
+		$row		= mysql_fetch_array($result);
+		//variable fot the total result
+		$T_ASGN		= $row['id'];	//Total assignment in the table
+		
+		//count of assignment having status 1 is NOT equal to 0 then
+		if($T_ASGN)
+		echo "
+		
+		<div class='left' style='padding-top: 5px; padding-bottom: 5px; 
+        border-left:1px solid #CCC;  border-right:1px solid #CCC; border-bottom: 1px solid #CCC;'>
+            <div class='left'>
+                <img src='images/icons/toolbar-icons/folder-alert.png' width='20' height='20' />&nbsp;
+                <input type='button' class='button' onclick='showAssign()' value='New Assignment' />
+				(<span class='error' style='font-size:14px'>".$T_ASGN."</span>)
+            </div>
+        </div>
+		
+		";
+		
+		else
+		echo"
+		<div class='left' style='padding-top: 5px; padding-bottom: 5px; 
+        border-left:1px solid #CCC;  border-right:1px solid #CCC; border-bottom: 1px solid #CCC;'>
+            <div class='left'>
+                <img src='images/icons/toolbar-icons/folder.png' width='20' height='20' />&nbsp;
+                <span class='s_normal'/>New Assignment</span>
+            </div>
+        </div>
+		
+		";
+		
+		?>
+        
+    	<!-- DIV FOR ASSIGNMENTS -->
+
+	</div> 
+	
+	<!-- DIV FOR BULLETIN BOARD -->
+	<div style="margin-top: 15px; margin-left: 5px; margin-right: 5px; margin-bottom: 15px;">
+        <div class="left" style=" height: 25px; border: 1px solid #CCC; border-top-left-radius: 0.3em; border-top-right-radius: 0.3em; 
+        background-color:#b6e56d">
+            <img src="images/icons/Info-icon.png"  width="20" height="20" />&nbsp;Bulletin Board           
+        </div>
+		
+		<div class='left' style='padding: 5px 10px;
+		border-left:1px solid #CCC;  border-right:1px solid #CCC; border-bottom: 1px solid #CCC;'>
+			<script type="text/javascript">new pausescroller(pausecontent2, "pscroller2", "someclass", 2000)</script>	
+		</div>
+	</div>
+	<!-- DIV FOR BULLETIN BOARD -->
+	
+	
+
+    <!-- Display Updates thats happening in the system -->
+</td>
+
+
+<?php include 'footer.php'; ?>

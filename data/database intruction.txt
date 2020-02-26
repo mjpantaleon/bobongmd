@@ -1,0 +1,5 @@
+-paste this file 'bobongmd' in your drive C: or D: 
+
+-find path xampp> mysql> data>
+
+-then access ur localhost locahost/phpmyadmin

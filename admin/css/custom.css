@@ -1,0 +1,15 @@
+body{ margin-top: 100px; background-color: #FAFAFA; }
+/* GLOBAL EFFECT */
+
+
+/* NAVIGATIONS */
+.top_nav_fix {  top:0; left:0; width:100%; height: 70px; position:fixed; border: 1px solid #CCC; 
+	background-color:#FAFAFA; z-index: 10;  }
+
+.links_wrap { float: right; border: 1px solid #CCC; padding: 3px 15px; width: 90%;  }
+.links { list-style: none; float: right;  }
+
+.nav_container { margin: 2px; padding: 5px; width: 910px; }
+
+
+/* NAVIGATIONS */
